@@ -54,15 +54,15 @@ from collections import deque
 
 NS_DEEPZOOM = "http://schemas.microsoft.com/deepzoom/2008"
 
-DEFAULT_RESIZE_FILTER = PIL.Image.ANTIALIAS
+DEFAULT_RESIZE_FILTER = PIL.Image.LANCZOS
 DEFAULT_IMAGE_FORMAT = "jpg"
 
 RESIZE_FILTERS = {
-    "cubic": PIL.Image.CUBIC,
+    "cubic": PIL.Image.BICUBIC,
     "bilinear": PIL.Image.BILINEAR,
     "bicubic": PIL.Image.BICUBIC,
     "nearest": PIL.Image.NEAREST,
-    "antialias": PIL.Image.ANTIALIAS,
+    "antialias": PIL.Image.LANCZOS,
 }
 
 IMAGE_FORMATS = {
@@ -264,7 +264,7 @@ class DeepZoomCollection(object):
         files_path = _get_or_create_path(_get_files_path(self.source))
         for level in reversed(range(self.max_level + 1)):
             level_path = _get_or_create_path("%s/%s" % (files_path, level))
-            level_size = 2 ** level
+            level_size = 2**level
             images_per_tile = int(math.floor(self.tile_size / level_size))
             column, row = self.get_tile_position(i, level, self.tile_size)
             tile_path = "%s/%s_%s.%s" % (level_path, column, row, self.tile_format)
@@ -309,14 +309,14 @@ class DeepZoomCollection(object):
                     if w != e_w or h != e_h:
                         # Resize incorrect tile to correct size
                         source_image = source_image.resize(
-                            (e_w, e_h), PIL.Image.ANTIALIAS
+                            (e_w, e_h), PIL.Image.LANCZOS
                         )
                         # Store new dimensions
                         w, h = e_w, e_h
                 else:
                     w = int(math.ceil(w * 0.5))
                     h = int(math.ceil(h * 0.5))
-                    source_image.thumbnail((w, h), PIL.Image.ANTIALIAS)
+                    source_image.thumbnail((w, h), PIL.Image.LANCZOS)
             column, row = self.get_position(i)
             x = (column % images_per_tile) * level_size
             y = (row % images_per_tile) * level_size
@@ -349,7 +349,7 @@ class DeepZoomCollection(object):
         return z_order
 
     def get_tile_position(self, z_order, level, tile_size):
-        level_size = 2 ** level
+        level_size = 2**level
         x, y = self.get_position(z_order)
         return (
             int(math.floor((x * level_size) / tile_size)),
@@ -405,7 +405,7 @@ class ImageCreator(object):
         if self.descriptor.width == width and self.descriptor.height == height:
             return self.image
         if (self.resize_filter is None) or (self.resize_filter not in RESIZE_FILTERS):
-            return self.image.resize((width, height), PIL.Image.ANTIALIAS)
+            return self.image.resize((width, height), PIL.Image.LANCZOS)
         return self.image.resize((width, height), RESIZE_FILTERS[self.resize_filter])
 
     def tiles(self, level):
@@ -434,7 +434,7 @@ class ImageCreator(object):
         for level in range(self.descriptor.num_levels):
             level_dir = _get_or_create_path(os.path.join(image_files, str(level)))
             level_image = self.get_image(level)
-            for (column, row) in self.tiles(level):
+            for column, row in self.tiles(level):
                 bounds = self.descriptor.get_tile_bounds(level, column, row)
                 tile = level_image.crop(bounds)
                 format = self.descriptor.tile_format
