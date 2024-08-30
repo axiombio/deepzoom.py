@@ -3,7 +3,7 @@
 from setuptools import setup, find_packages
 
 setup(
-    name="DeepZoomTools",
+    name="deepzoom",
     version="3.0.0",
     author="Daniel Gasienica",
     author_email="daniel@gasienica.ch",
